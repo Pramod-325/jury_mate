@@ -1,4 +1,3 @@
-
 const express = require("express");
 const axios = require("axios");
 const dotenv = require("dotenv");
@@ -9,6 +8,7 @@ const {
   Type,
   HarmBlockThreshold,
   HarmCategory,
+  Type
 } = require('@google/genai');
 const { type } = require("os");
 const { json } = require("body-parser");
