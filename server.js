@@ -5,10 +5,11 @@ const { URL } = require("url");
 const atob = require("atob");
 const {
   GoogleGenAI,
+  Type,
   HarmBlockThreshold,
   HarmCategory,
-  Type
 } = require('@google/genai');
+
 
 dotenv.config();
 
@@ -32,7 +33,7 @@ const SKIP_KEYWORDS = new Set(["test", "mock", "logo", "docs", "doc", "readme", 
 
 // System prompt for Gemini AI
 const SYSTEM_PROMPT = `
-You are a senior software engineer analyzing GitHub repositories. Based on the provided repository data, please provide:
+You are a software engineer analyzing GitHub repositories for a hackathon. Based on the provided repository project data, please provide:
 
 1. A comprehensive analysis of the project structure and architecture
 2. Technology stack assessment
@@ -41,12 +42,14 @@ You are a senior software engineer analyzing GitHub repositories. Based on the p
 5. Suggestions for improvements or potential issues
 6. Overall project summary
 
-Be technical but accessible, and provide actionable insights.
+Be technical but accessible, and provide response stricty using the given structured schema, if readme is not provided in the projectData or else generate it based on your analysis of the repo.
 `;
-const ai = new GoogleGenAI({ apiKey: "GEMINI_API_KEY" });
+
+
+const ai = new GoogleGenAI({ apiKey: `${GEMINI_API_KEY}` });
 
 // Helper functions (from your original file)
-function parseRepoUrl(repoUrl) {
+async function parseRepoUrl(repoUrl) {
   const parsed = new URL(repoUrl);
   const pathParts = parsed.pathname.replace(/^\/|\/$/g, "").split("/");
   if (pathParts.length < 2) {
@@ -158,55 +161,54 @@ async function getReadme(owner, repo) {
 }
 
 
+
 async function analyzeWithGemini(projectData){
-  const compactData = {
-      repository: {
-        name: projectData.repository.name,
-        description: projectData.repository.description,
-        languages: projectData.statistics.languages,
-        contributorsCount: projectData.statistics.contributorsCount,
-        commitsCount: projectData.statistics.commitsCount
-      },
-      readme: projectData.documentation.readme.slice(0, 1000), // Limit README
-      fileTypes: projectData.analysis.fileTypes,
-      directories: projectData.analysis.directories,
-      totalFiles: projectData.analysis.totalFiles,
-      // Only include first 3 code files to reduce token usage
-      sampleCodeFiles: Object.keys(projectData.codeFiles).slice(0, 3).reduce((acc, key) => {
-        acc[key] = projectData.codeFiles[key].slice(0, 1000); // Limit each file
-        return acc;
-      }, {})
-      };
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    // model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash-preview-05-20",
     contents:
-      "List a few popular cookie recipes, and include the amounts of ingredients.",
+      `${projectData}`,
     config: {
       responseMimeType: "application/json",
+      systemInstruction: `${SYSTEM_PROMPT}`,
       responseSchema: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            recipeName: {
-              type: Type.STRING,
-            },
-            ingredients: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.STRING,
-              },
-            },
+        type: Type.OBJECT,
+        properties:{
+          repo_name:{
+            type: Type.STRING
           },
-          propertyOrdering: ["recipeName", "ingredients"],
-        },
+          owner:{
+            type: Type.STRING
+          },
+          langs_used:{
+            type: Type.ARRAY,
+            items:{
+              type: Type.STRING
+            }
+          },
+          tech_stack:{
+            type: Type.ARRAY,
+            items:{
+              type: Type.STRING
+            }
+          },
+          readme:{
+            type: Type.STRING
+          },
+          matched_requirements:{
+            type: Type.BOOLEAN
+          },
+          final_remarks:{
+            type: Type.STRING
+          },
+        }
       },
-      maxOutputTokens: 500,
-      temperature: 0.1
+      maxOutputTokens: 5000,
+      temperature: 1
     },
   });
 
-  console.log(response.text);
+  // console.log(response.text);
   return(response.text);
 }
 
@@ -240,7 +242,7 @@ app.get('/analyze-repo', async (req, res) => {
     console.log(`Analyzing repository: ${repoUrl}`);
 
     // Parse repository URL
-    const { owner, repo } = parseRepoUrl(repoUrl);
+    const { owner, repo } = await parseRepoUrl(repoUrl);
 
     // Gather all repository data
     const [repoInfo, languages, contributors, commits, readme, codeFiles] = await Promise.all([
@@ -260,10 +262,8 @@ app.get('/analyze-repo', async (req, res) => {
         url: repoUrl,
         owner: owner,
         stars: repoInfo.stargazers_count,
-        forks: repoInfo.forks_count,
         createdAt: repoInfo.created_at,
-        updatedAt: repoInfo.updated_at,
-        defaultBranch: repoInfo.default_branch
+        updatedAt: repoInfo.updated_at
       },
       statistics: {
         languages: languages,
@@ -273,23 +273,25 @@ app.get('/analyze-repo', async (req, res) => {
       documentation: {
         readme: readme.slice(0, 2000) + (readme.length > 2000 ? "\n... (truncated)" : "")
       },
-      codeFiles: codeFiles,
+      // codeFiles: codeFiles,
       analysis: {
         totalFiles: Object.keys(codeFiles).length,
         fileTypes: [...new Set(Object.keys(codeFiles).map(file => file.split('.').pop()))],
         directories: [...new Set(Object.keys(codeFiles).map(file => file.split('/')[0]))]
       }
     };
-
+    // console.log(projectData);
+    
     // Analyze with Gemini AI
-    const aiAnalysis = await analyzeWithGemini(projectData);
-
+    const aiAnalysis = await analyzeWithGemini(JSON.stringify(projectData));
+    // console.log(aiAnalysis);
+    
     // Return the final response
     res.json({
+      // projectData
       success: true,
-      data: projectData,
-      aiAnalysis: aiAnalysis,
-      timestamp: new Date().toISOString()
+      aiAnalysis: JSON.parse(aiAnalysis),
+      // timestamp: new Date().toISOString()
     });
 
   } catch (error) {
