@@ -25,7 +25,9 @@ const GitHubRepoAnalyzer = () => {
     setLoading(true);
     try {
       const response = await fetch(`http://localhost:3000/analyze-repo?repoUrl=${url}`);
-      const result = await response.text(); // or .json() if backend returns JSON
+      console.log(response);
+      const result = await response.json(); // or .json() if backend returns JSON
+      console.log(result);
       setCode(result);
     } catch (err) {
       setError('Error fetching analysis. Please try again.');
@@ -69,7 +71,7 @@ const GitHubRepoAnalyzer = () => {
           {loading ? 'Analyzing...' : 'Analyze'}
         </button>
 
-        {code && (
+        {/* {code && (
           <div className="relative bg-gray-800 rounded-lg p-4 text-sm overflow-auto">
             <pre className="whitespace-pre-wrap break-words">{code}</pre>
             <button
@@ -79,7 +81,7 @@ const GitHubRepoAnalyzer = () => {
               {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
