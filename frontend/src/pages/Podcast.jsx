@@ -1,23 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Header from '../components/Header';
 import { Play, Pause, Github, Volume2, Loader2, AlertCircle, CheckCircle, Download, Mic, MicOff } from 'lucide-react';
 
-const Header = () => (
-  <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-gray-800/50">
-    <div className="container mx-auto px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Github className="h-8 w-8 text-green-400" />
-          <span className="text-xl font-bold text-white">Jury Mate</span>
-        </div>
-        <nav className="hidden md:flex items-center space-x-8">
-          <a href="#" className="text-gray-400 hover:text-green-400 transition-colors">Features</a>
-          <a href="#" className="text-gray-400 hover:text-green-400 transition-colors">About</a>
-          <a href="#" className="text-gray-400 hover:text-green-400 transition-colors">Contact</a>
-        </nav>
-      </div>
-    </div>
-  </header>
-);
 
 const GitHubPodcastGenerator = () => {
   const [repoUrl, setRepoUrl] = useState('');
@@ -378,12 +362,6 @@ const GitHubPodcastGenerator = () => {
         </div>
       </main>
 
-      {/* Footer */}
-      <div className="text-center mt-12 pb-8">
-        <p className="text-gray-400">
-          Powered by AI • Generate engaging podcasts from any GitHub repository
-        </p>
-      </div>
 
       <style jsx>{`
         @keyframes fade-in {

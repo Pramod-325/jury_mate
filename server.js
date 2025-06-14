@@ -1,4 +1,3 @@
-
 const express = require("express");
 const axios = require("axios");
 const dotenv = require("dotenv");
@@ -8,6 +7,7 @@ const {
   GoogleGenAI,
   HarmBlockThreshold,
   HarmCategory,
+  Type
 } = require('@google/genai');
 
 dotenv.config();
