@@ -116,8 +116,7 @@ async function getReadme(owner, repo) {
   }
 }
 
-async function main() {
-  const repoUrl = "https://github.com/Pramod-325/whatsthat.git"
+async function main(repoUrl) {
   const { owner, repo } = parseRepoUrl(repoUrl);
 
   const repoInfo = await getRepoInfo(owner, repo);
@@ -142,6 +141,3 @@ async function main() {
     console.log(code);
   }
 }
-
-
-main().catch(err => console.error(err));
