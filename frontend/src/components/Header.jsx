@@ -3,7 +3,7 @@ import {Link} from 'react-router-dom';
 const Header = () => {
   return (
     <header className="fixed top-0 w-full bg-black/90 backdrop-blur-md  border-gray-800 z-50">
-      <div className="container mx-auto py-6">
+      <div className="container mx-auto py-6 px-8 md:px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
@@ -27,12 +27,6 @@ const Header = () => {
               Contact
             </Link>
           </nav> */}
-
-          <div className="flex items-center space-x-4">
-            <a href='#features' className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-black font-semibold">
-              Get Started
-            </a>
-          </div>
           </div>
         </div>
       </div>
