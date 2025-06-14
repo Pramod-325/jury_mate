@@ -8,10 +8,24 @@ const Podcast = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMicActive, setIsMicActive] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [error, setError] = useState('');
 
+  const isValidGithubUrl = (url) => {
+  const githubRegex = /^https:\/\/github\.com\/[\w-]+\/[\w.-]+\/?$/;
+  return githubRegex.test(url);
+};
   const handleAnalyze = async () => {
-    if (!githubUrl) return;
-    
+      setError(''); // Clear previous errors
+
+  if (!githubUrl) {
+    setError('GitHub URL cannot be empty.');
+    return;
+  }
+
+  if (!isValidGithubUrl(githubUrl)) {
+    setError('Please enter a valid GitHub repository URL (e.g., https://github.com/user/repo).');
+    return;
+  }
     setIsAnalyzing(true);
     // Simulate analysis - replace with actual backend call
     setTimeout(() => {
@@ -47,9 +61,9 @@ return (
 
           {/* Input Section */}
           <div className="bg-gray-900/40 backdrop-blur-xl border border-gray-800/50 rounded-3xl p-8 mb-8 hover:border-green-500/30 transition-all duration-500">
-            <div className="flex flex-col md:flex-row gap-4 items-end">
+            <div className="flex flex-col md:flex-row gap-4 items-center">
               <div className="flex-1">
-                <label htmlFor="github-url" className="block text-sm font-medium text-gray-300 mb-3">
+                <label htmlFor="github-url" className="block text-lg font-medium text-gray-200 mb-3">
                   GitHub Repository URL
                 </label>
                 <div className="relative">
@@ -60,8 +74,11 @@ return (
                     placeholder="https://github.com/username/repository"
                     value={githubUrl}
                     onChange={(e) => setGithubUrl(e.target.value)}
-                    className="pl-12 h-14 bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-green-500 focus:ring-green-500/20 rounded-xl text-lg"
+                    className="px-12 w-xl h-14 bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-green-500 focus:ring-green-500/20 rounded-xl text-lg"
                   />
+                  {error && (
+  <p className="text-red-500 text-sm mt-2 ml-1">{error}</p>
+)}
                 </div>
               </div>
  <button
