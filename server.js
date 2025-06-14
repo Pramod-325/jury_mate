@@ -8,10 +8,8 @@ const {
   Type,
   HarmBlockThreshold,
   HarmCategory,
-  Type
 } = require('@google/genai');
-const { type } = require("os");
-const { json } = require("body-parser");
+
 
 dotenv.config();
 
@@ -51,7 +49,7 @@ Be technical but accessible, and provide response stricty using the given struct
 const ai = new GoogleGenAI({ apiKey: `${GEMINI_API_KEY}` });
 
 // Helper functions (from your original file)
-function parseRepoUrl(repoUrl) {
+async function parseRepoUrl(repoUrl) {
   const parsed = new URL(repoUrl);
   const pathParts = parsed.pathname.replace(/^\/|\/$/g, "").split("/");
   if (pathParts.length < 2) {
@@ -244,7 +242,7 @@ app.get('/analyze-repo', async (req, res) => {
     console.log(`Analyzing repository: ${repoUrl}`);
 
     // Parse repository URL
-    const { owner, repo } = parseRepoUrl(repoUrl);
+    const { owner, repo } = await parseRepoUrl(repoUrl);
 
     // Gather all repository data
     const [repoInfo, languages, contributors, commits, readme, codeFiles] = await Promise.all([
@@ -275,22 +273,24 @@ app.get('/analyze-repo', async (req, res) => {
       documentation: {
         readme: readme.slice(0, 2000) + (readme.length > 2000 ? "\n... (truncated)" : "")
       },
-      codeFiles: codeFiles,
+      // codeFiles: codeFiles,
       analysis: {
         totalFiles: Object.keys(codeFiles).length,
         fileTypes: [...new Set(Object.keys(codeFiles).map(file => file.split('.').pop()))],
         directories: [...new Set(Object.keys(codeFiles).map(file => file.split('/')[0]))]
       }
     };
-
+    // console.log(projectData);
+    
     // Analyze with Gemini AI
-    // const aiAnalysis = await analyzeWithGemini(projectData);
-
+    const aiAnalysis = await analyzeWithGemini(JSON.stringify(projectData));
+    // console.log(aiAnalysis);
+    
     // Return the final response
     res.json({
-      projectData
-      // success: true,
-      // aiAnalysis: JSON.parse(aiAnalysis),
+      // projectData
+      success: true,
+      aiAnalysis: JSON.parse(aiAnalysis),
       // timestamp: new Date().toISOString()
     });
 
