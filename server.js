@@ -1,5 +1,6 @@
 const express = require("express");
 const axios = require("axios");
+const cors=require('cors');
 const dotenv = require("dotenv");
 const { URL } = require("url");
 const atob = require("atob");
@@ -19,7 +20,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use(cors());
 // Environment variables
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
