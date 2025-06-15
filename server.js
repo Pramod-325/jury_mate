@@ -11,7 +11,6 @@ const {
   HarmCategory,
 } = require('@google/genai');
 
-
 dotenv.config();
 
 const app = express();
@@ -34,16 +33,14 @@ const SKIP_KEYWORDS = new Set(["test", "mock", "logo", "docs", "doc", "readme", 
 
 // System prompt for Gemini AI
 const SYSTEM_PROMPT = `
-You are a software engineer analyzing GitHub repositories for a hackathon. Based on the provided repository project data, please provide:
+You are a senior software engineer who analyzes GitHub repositories for Hackathon. Based on the users provided repository project data, and the hackathon requirements do the following activities and strictly generate a response with the data model given as a structured schema without any empty values:
 
-1. A comprehensive analysis of the project structure and architecture
-2. Technology stack assessment
+1. Make comprehensive analysis of the project structure and architecture
+2. Figure out exactly what technology stack they have used and functionalites they have implemented compare them with the actual hackathon requirements and update the matched reuirements values in the data model.
 3. Code quality observations
-4. Project complexity evaluation
-5. Suggestions for improvements or potential issues
-6. Overall project summary
+5. Suggestions for improvements or potential issues provide in the final_remarks data.
 
-Be technical but accessible, and provide response stricty using the given structured schema, if readme is not provided in the projectData or else generate it based on your analysis of the repo.
+Be technical provide response stricty using the given structured schema, if readme is not provided in the projectData or else generate it based on your analysis of the repo.
 `;
 
 
@@ -175,12 +172,6 @@ async function analyzeWithGemini(projectData){
       responseSchema: {
         type: Type.OBJECT,
         properties:{
-          repo_name:{
-            type: Type.STRING
-          },
-          owner:{
-            type: Type.STRING
-          },
           langs_used:{
             type: Type.ARRAY,
             items:{
@@ -197,15 +188,26 @@ async function analyzeWithGemini(projectData){
             type: Type.STRING
           },
           matched_requirements:{
-            type: Type.BOOLEAN
+            type: Type.ARRAY,
+            items:{
+              type:Type.OBJECT,
+              properties:{
+                requirement:{
+                  type:Type.STRING
+                },
+                matched:{
+                  type: Type.BOOLEAN
+                }
+              } 
+            }
           },
           final_remarks:{
             type: Type.STRING
           },
         }
       },
-      maxOutputTokens: 5000,
-      temperature: 1
+      maxOutputTokens: 7000,
+      temperature: 1.5
     },
   });
 
@@ -272,9 +274,9 @@ app.get('/analyze-repo', async (req, res) => {
         commitsCount: commits
       },
       documentation: {
-        readme: readme.slice(0, 2000) + (readme.length > 2000 ? "\n... (truncated)" : "")
+        readme: readme //.slice(0, 2000) + (readme.length > 2000 ? "\n... (truncated)" : "")
       },
-      // codeFiles: codeFiles,
+      codeFiles: codeFiles,
       analysis: {
         totalFiles: Object.keys(codeFiles).length,
         fileTypes: [...new Set(Object.keys(codeFiles).map(file => file.split('.').pop()))],
@@ -289,10 +291,23 @@ app.get('/analyze-repo', async (req, res) => {
     
     // Return the final response
     res.json({
-      // projectData
       success: true,
       aiAnalysis: JSON.parse(aiAnalysis),
-      // timestamp: new Date().toISOString()
+      repository: {
+        name: repoInfo.name,
+        description: repoInfo.description || "No description",
+        url: repoUrl,
+        owner: owner,
+        stars: repoInfo.stargazers_count,
+        createdAt: repoInfo.created_at,
+        updatedAt: repoInfo.updated_at
+      },
+      statistics: {
+        languages: languages,
+        contributorsCount: contributors,
+        commitsCount: commits
+      },
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {
