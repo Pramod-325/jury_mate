@@ -185,7 +185,7 @@ const GitHubReadmeGenerator = () => {
             owner: data.aiAnalysis.owner || 'Unknown',
             repo: data.aiAnalysis.repo_name || 'Unknown',
             description: 'AI-generated README based on repository analysis',
-            stars: Math.floor(Math.random() * 1000), // You can remove this or get from repo data
+            stars: data.repository.stars, // You can remove this or get from repo data
             languages: data.aiAnalysis.langs_used || []
           },
           readme_content: data.aiAnalysis.readme || 'No README content generated.'
