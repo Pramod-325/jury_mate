@@ -164,7 +164,7 @@ const GitHubReadmeGenerator = () => {
     
     try {
       // Call your backend API
-      const response = await fetch(`http://localhost:3000/analyze-repo?repoUrl=${encodeURIComponent(repoUrl)}`, {
+      const response = await fetch(`http://localhost:3000/analyze-repo?repoUrl=${encodeURIComponent(repoUrl)}&hreq=${hreq}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

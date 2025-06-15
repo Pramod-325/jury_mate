@@ -8,6 +8,7 @@ import Header from '../components/Header';
 const GitHubRepoAnalyzer = () => {
 
   const [url, setUrl] = useState('');
+  const [hreq, setHreq] = useState('');
   const [error, setError] = useState('');
   const [repositoryData, setRepositoryData] = useState('');
   const [loading, setLoading] = useState(false);
@@ -54,7 +55,7 @@ const GitHubRepoAnalyzer = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/analyze-repo?repoUrl=${url}`);
+      const response = await fetch(`http://localhost:3000/analyze-repo?repoUrl=${url}&hreq=${hreq}`);
       console.log(response);
       const result = await response.json(); // or .json() if backend returns JSON
       console.log(result.aiAnalysis);
@@ -93,6 +94,14 @@ const GitHubRepoAnalyzer = () => {
           </div>
 
           {/* Input Section */}
+          <input
+            id="hreq"
+            type="text"
+            placeholder="Hackathon Requirements"
+            value={hreq}
+            onChange={(e) => setHreq(e.target.value)}
+            className="pl-12 w-xl h-14 bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 focus:border-green-500 focus:ring-green-500/20 rounded-xl text-lg"
+          />
           <div className="mb-8">
             <div className="bg-gray-900/40 backdrop-blur-xl border border-gray-800/50 rounded-3xl p-8 hover:border-green-500/30 transition-all duration-500">
               <div className="flex flex-col md:flex-row gap-4 items-end">

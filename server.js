@@ -40,7 +40,7 @@ You are a senior software engineer who analyzes GitHub repositories for Hackatho
 3. Code quality observations
 5. Suggestions for improvements or potential issues provide in the final_remarks data.
 
-Be technical provide response stricty using the given structured schema, if readme is not provided in the projectData or else generate it based on your analysis of the repo and use only english text and utf compatible emojis instead of random characters.
+Be technical provide response stricty using the given structured schema, if readme is not provided in the projectData then generate it based on your analysis of the repositories code files in project data with atleast 200 words or more, also use only english text with utf compatible emojis instead of random characters.
 `;
 
 
@@ -160,7 +160,7 @@ async function getReadme(owner, repo) {
 
 
 
-async function analyzeWithGemini(projectData){
+async function analyzeWithGemini(projectData, hquery){
   const response = await ai.models.generateContent({
     // model: "gemini-2.0-flash",
     model: "gemini-2.5-flash-preview-05-20",
@@ -168,7 +168,7 @@ async function analyzeWithGemini(projectData){
       `${projectData}`,
     config: {
       responseMimeType: "application/json",
-      systemInstruction: `${SYSTEM_PROMPT}`,
+      systemInstruction: `${SYSTEM_PROMPT+'\n\n'+"hackathon requirements: "+hquery}`,
       responseSchema: {
         type: Type.OBJECT,
         properties:{
@@ -218,8 +218,8 @@ async function analyzeWithGemini(projectData){
 // Main route to analyze GitHub repository
 app.get('/analyze-repo', async (req, res) => {
   try {
-    const { repoUrl } = req.query;
-    
+    const { repoUrl, hreq } = req.query;
+    const hquery= hreq?.replaceAll("+"," ") || hreq?.replaceAll("%20"," ");
     if (!repoUrl) {
       return res.status(400).json({ 
         error: 'Repository URL is required',
@@ -283,10 +283,10 @@ app.get('/analyze-repo', async (req, res) => {
         directories: [...new Set(Object.keys(codeFiles).map(file => file.split('/')[0]))]
       }
     };
-    // console.log(projectData);
+    console.log(projectData);
     
     // Analyze with Gemini AI
-    const aiAnalysis = await analyzeWithGemini(JSON.stringify(projectData));
+    const aiAnalysis = await analyzeWithGemini(JSON.stringify(projectData), hquery);
     // console.log(aiAnalysis);
     
     // Return the final response
