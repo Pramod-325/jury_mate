@@ -3,7 +3,7 @@ import { Github, FileText, Copy, Download, CheckCircle, AlertCircle, Loader2, Co
 
 const GitHubReadmeGenerator = () => {
   const [repoUrl, setRepoUrl] = useState('');
-  const [isConnected, setIsConnected] = useState(true); // Simulating connection for demo
+  const [isConnected, setIsConnected] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState('');
   const [stepMessage, setStepMessage] = useState('');
@@ -15,25 +15,48 @@ const GitHubReadmeGenerator = () => {
   
   const readmeRef = useRef(null);
 
-  // Simulate WebSocket connection status
+  // Check backend connection
   useEffect(() => {
-    const interval = setInterval(() => {
-      setIsConnected(Math.random() > 0.1); // 90% uptime simulation
-    }, 5000);
+    checkBackendConnection();
+    const interval = setInterval(checkBackendConnection, 30000); // Check every 30 seconds
     
     return () => clearInterval(interval);
   }, []);
+
+  const checkBackendConnection = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/health', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setIsConnected(data.status === 'OK' && data.env.githubToken && data.env.geminiApiKey);
+        setError(''); // Clear any previous connection errors
+      } else {
+        setIsConnected(false);
+        setError('Backend server returned an error status');
+      }
+    } catch (error) {
+      console.error('Backend connection check failed:', error);
+      setIsConnected(false);
+      setError('Cannot connect to backend server. Please ensure it is running on port 3000.');
+    }
+  };
 
   const isValidGithubUrl = (url) => {
     const githubRegex = /^https:\/\/github\.com\/[\w-]+\/[\w.-]+\/?$/;
     return githubRegex.test(url);
   };
 
-  const simulateGeneration = () => {
+  const simulateProgressSteps = () => {
     const steps = [
       { step: 'fetching_repo', message: 'Analyzing repository structure...', progress: 20 },
       { step: 'analyzing_code', message: 'Understanding codebase and dependencies...', progress: 40 },
-      { step: 'generating_sections', message: 'Creating README sections...', progress: 60 },
+      { step: 'generating_sections', message: 'AI is generating README content...', progress: 60 },
       { step: 'formatting_content', message: 'Formatting markdown content...', progress: 80 },
       { step: 'completed', message: 'README generated successfully!', progress: 100 }
     ];
@@ -47,121 +70,16 @@ const GitHubReadmeGenerator = () => {
         setProgress(currentStepData.progress);
         
         if (currentStepData.step === 'completed') {
-          // Generate mock README content
-          const mockReadme = generateMockReadme();
-          setReadmeData(mockReadme);
-          setIsGenerating(false);
           clearInterval(stepInterval);
         }
         stepIndex++;
       }
     }, 1500);
+
+    return () => clearInterval(stepInterval);
   };
 
-  const generateMockReadme = () => {
-    const urlParts = repoUrl.split('/');
-    const owner = urlParts[urlParts.length - 2];
-    const repo = urlParts[urlParts.length - 1];
-    
-    return {
-      repo_info: {
-        owner,
-        repo,
-        description: 'An awesome project built with modern technologies',
-        stars: Math.floor(Math.random() * 1000),
-        languages: ['JavaScript', 'React', 'Node.js']
-      },
-      readme_content: `# ${repo}
-
-![GitHub stars](https://img.shields.io/github/stars/${owner}/${repo}?style=social)
-![GitHub forks](https://img.shields.io/github/forks/${owner}/${repo}?style=social)
-![GitHub issues](https://img.shields.io/github/issues/${owner}/${repo})
-
-## 🚀 Overview
-
-${repo} is a modern, feature-rich application built with cutting-edge technologies. This project demonstrates best practices in software development and provides a solid foundation for building scalable applications.
-
-## ✨ Features
-
-- 🎯 **Modern Architecture**: Built with the latest web technologies
-- 🔥 **High Performance**: Optimized for speed and efficiency  
-- 📱 **Responsive Design**: Works seamlessly across all devices
-- 🛡️ **Type Safe**: Written with TypeScript for better code quality
-- 🎨 **Beautiful UI**: Crafted with attention to detail
-- ⚡ **Fast Development**: Hot reload and instant feedback
-
-## 🛠️ Installation
-
-\`\`\`bash
-# Clone the repository
-git clone https://github.com/${owner}/${repo}.git
-
-# Navigate to project directory
-cd ${repo}
-
-# Install dependencies
-npm install
-
-# Start development server
-npm start
-\`\`\`
-
-## 📖 Usage
-
-\`\`\`javascript
-import { ${repo} } from './${repo}';
-
-// Initialize the application
-const app = new ${repo}({
-  apiKey: 'your-api-key',
-  environment: 'development'
-});
-
-// Start the application
-app.start();
-\`\`\`
-
-## 🔧 Configuration
-
-Create a \`.env\` file in the root directory:
-
-\`\`\`env
-API_KEY=your_api_key_here
-DATABASE_URL=your_database_url
-PORT=3000
-\`\`\`
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-1. Fork the repository
-2. Create your feature branch (\`git checkout -b feature/amazing-feature\`)
-3. Commit your changes (\`git commit -m 'Add some amazing feature'\`)
-4. Push to the branch (\`git push origin feature/amazing-feature\`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👥 Authors
-
-- **${owner}** - *Initial work* - [@${owner}](https://github.com/${owner})
-
-## 🙏 Acknowledgments
-
-- Thanks to all contributors who helped build this project
-- Special thanks to the open source community
-- Built with ❤️ using modern web technologies
-
----
-
-⭐ Don't forget to star this repository if you found it helpful!`
-    };
-  };
-
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setError('');
     
     if (!repoUrl.trim()) {
@@ -175,7 +93,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
     }
     
     if (!isConnected) {
-      setError('Not connected to server. Please wait...');
+      setError('Not connected to backend server. Please ensure the server is running on port 3000.');
       return;
     }
     
@@ -184,7 +102,55 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
     setReadmeData(null);
     setShowPreview(false);
     
-    simulateGeneration();
+    // Start progress animation
+    const cleanupProgress = simulateProgressSteps();
+    
+    try {
+      // Call your backend API
+      const response = await fetch(`http://localhost:3000/analyze-repo?repoUrl=${encodeURIComponent(repoUrl)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && data.aiAnalysis) {
+        // Transform the AI analysis data to match your frontend format
+        const transformedData = {
+          repo_info: {
+            owner: data.aiAnalysis.owner || 'Unknown',
+            repo: data.aiAnalysis.repo_name || 'Unknown',
+            description: 'AI-generated README based on repository analysis',
+            stars: Math.floor(Math.random() * 1000), // You can remove this or get from repo data
+            languages: data.aiAnalysis.langs_used || []
+          },
+          readme_content: data.aiAnalysis.readme || 'No README content generated.'
+        };
+        
+        setReadmeData(transformedData);
+        setCurrentStep('completed');
+        setStepMessage('README generated successfully!');
+        setProgress(100);
+      } else {
+        throw new Error('Invalid response from backend');
+      }
+      
+    } catch (error) {
+      console.error('Error generating README:', error);
+      setError(`Failed to generate README: ${error.message}`);
+      setCurrentStep('');
+      setProgress(0);
+    } finally {
+      setIsGenerating(false);
+      if (cleanupProgress) cleanupProgress();
+    }
   };
 
   const handleCopy = async () => {
@@ -196,6 +162,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = readmeData.readme_content;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      } catch (fallbackError) {
+        console.error('Fallback copy failed:', fallbackError);
+      }
+      document.body.removeChild(textArea);
     }
   };
 
@@ -228,6 +207,37 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
   return (
     <div className="min-h-screen bg-black text-white">
+      {/* Custom CSS for animations */}
+      <style>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-out;
+        }
+        
+        .animate-pulse {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: .5;
+          }
+        }
+      `}</style>
+
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-gray-800/50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -258,10 +268,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
                 : 'bg-red-500/20 text-red-400 border border-red-500/30'
             }`}>
               <div className={`w-2 h-2 rounded-full mr-2 ${
-                isConnected ? 'bg-green-400' : 'bg-red-400'
+                isConnected ? 'bg-green-400' : 'bg-red-400 animate-pulse'
               }`}></div>
-              {isConnected ? 'Connected to AI Service' : 'Connecting to AI Service...'}
+              {isConnected ? 'Connected to AI Service' : 'Disconnected from Backend Server'}
             </div>
+            {!isConnected && (
+              <p className="text-sm text-gray-500 mt-2">
+                Make sure your backend server is running on port 3000
+              </p>
+            )}
           </div>
 
           {/* Input Section */}
@@ -423,7 +438,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
                 <div className="p-6 max-h-96 overflow-y-auto">
                   <pre 
                     ref={readmeRef}
-                    className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap font-mono typing-animation"
+                    className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap font-mono"
                   >
                     {readmeData.readme_content}
                   </pre>
@@ -438,7 +453,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
                   </h4>
                   <div className="prose prose-invert prose-green max-w-none">
                     <div className="text-gray-300 text-sm leading-relaxed">
-                      {/* This would be the rendered markdown in a real implementation */}
                       <p className="text-gray-400 italic">
                         Preview would show the rendered markdown here...
                       </p>
@@ -450,39 +464,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
           )}
         </div>
       </main>
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes typing {
-          from {
-            width: 0;
-          }
-          to {
-            width: 100%;
-          }
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out;
-        }
-        
-        .typing-animation {
-          overflow: hidden;
-          white-space: nowrap;
-          animation: typing 3s steps(40, end);
-          animation-fill-mode: both;
-        }
-      `}</style>
     </div>
   );
 };
