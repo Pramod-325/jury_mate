@@ -15,6 +15,63 @@ const GitHubReadmeGenerator = () => {
   
   const readmeRef = useRef(null);
 
+  // Simple markdown renderer
+  const renderMarkdown = (markdown) => {
+    if (!markdown) return '';
+    
+    let html = markdown
+      // Headers
+      .replace(/^# (.*$)/gim, '<h1 class="text-3xl font-bold mb-4 text-white">$1</h1>')
+      .replace(/^## (.*$)/gim, '<h2 class="text-2xl font-bold mb-3 text-white">$1</h2>')
+      .replace(/^### (.*$)/gim, '<h3 class="text-xl font-bold mb-2 text-white">$1</h3>')
+      .replace(/^#### (.*$)/gim, '<h4 class="text-lg font-bold mb-2 text-white">$1</h4>')
+      .replace(/^##### (.*$)/gim, '<h5 class="text-base font-bold mb-1 text-white">$1</h5>')
+      .replace(/^###### (.*$)/gim, '<h6 class="text-sm font-bold mb-1 text-white">$1</h6>')
+      
+      // Code blocks
+      .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-gray-900 p-4 rounded-lg overflow-x-auto mb-4"><code class="text-green-400 text-sm">$2</code></pre>')
+      
+      // Inline code
+      .replace(/`([^`]+)`/g, '<code class="bg-gray-800 px-2 py-1 rounded text-green-400 text-sm">$1</code>')
+      
+      // Bold
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-white">$1</strong>')
+      .replace(/__(.*?)__/g, '<strong class="font-bold text-white">$1</strong>')
+      
+      // Italic
+      .replace(/\*(.*?)\*/g, '<em class="italic text-gray-300">$1</em>')
+      .replace(/_(.*?)_/g, '<em class="italic text-gray-300">$1</em>')
+      
+      // Links
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-green-400 hover:text-green-300 underline" target="_blank" rel="noopener noreferrer">$1</a>')
+      
+      // Images
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg mb-4" />')
+      
+      // Unordered lists
+      .replace(/^\- (.*$)/gim, '<li class="text-gray-300 mb-1">$1</li>')
+      .replace(/^\* (.*$)/gim, '<li class="text-gray-300 mb-1">$1</li>')
+      
+      // Ordered lists
+      .replace(/^\d+\. (.*$)/gim, '<li class="text-gray-300 mb-1">$1</li>')
+      
+      // Blockquotes
+      .replace(/^> (.*$)/gim, '<blockquote class="border-l-4 border-green-500 pl-4 italic text-gray-400 mb-4">$1</blockquote>')
+      
+      // Horizontal rule
+      .replace(/^---$/gim, '<hr class="border-gray-700 my-4" />')
+      
+      // Line breaks
+      .replace(/\n/g, '<br />');
+
+    // Wrap consecutive list items in ul/ol tags
+    html = html.replace(/(<li class="text-gray-300 mb-1">.*?<\/li>(?:<br \/>)*)+/g, (match) => {
+      return `<ul class="list-disc list-inside mb-4 space-y-1">${match.replace(/<br \/>/g, '')}</ul>`;
+    });
+
+    return html;
+  };
+
   // Check backend connection
   useEffect(() => {
     checkBackendConnection();
@@ -445,6 +502,7 @@ const GitHubReadmeGenerator = () => {
                 </div>
               </div>
 
+              {/* Markdown Preview */}
               {showPreview && (
                 <div className="mt-6 bg-gray-800/50 rounded-2xl p-6 animate-fade-in">
                   <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
@@ -452,11 +510,12 @@ const GitHubReadmeGenerator = () => {
                     Markdown Preview
                   </h4>
                   <div className="prose prose-invert prose-green max-w-none">
-                    <div className="text-gray-300 text-sm leading-relaxed">
-                      <p className="text-gray-400 italic">
-                        Preview would show the rendered markdown here...
-                      </p>
-                    </div>
+                    <div 
+                      className="text-gray-300 leading-relaxed max-h-96 overflow-y-auto"
+                      dangerouslySetInnerHTML={{ 
+                        __html: renderMarkdown(readmeData.readme_content) 
+                      }}
+                    />
                   </div>
                 </div>
               )}

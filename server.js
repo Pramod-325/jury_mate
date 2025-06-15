@@ -291,11 +291,6 @@ app.get('/analyze-repo', async (req, res) => {
     
     // Return the final response
     res.json({
-<<<<<<< HEAD
-      // projectData
-      
-=======
->>>>>>> a4f12e72eb942db4ec814c600c144c9938ff9a72
       success: true,
       aiAnalysis: JSON.parse(aiAnalysis),
       repository: {
