@@ -1,3 +1,5 @@
 .env
 detailsfetch.py
 node_modules
+
+/static
