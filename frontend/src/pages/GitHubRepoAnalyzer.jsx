@@ -281,6 +281,10 @@ const GitHubRepoAnalyzer = () => {
                     </div>
                   </div>
                 </div>
+                <div className="p-6 bg-gray-900/40 backdrop-blur-xl border-gray-800/50 hover:border-green-500/30 transition-all duration-500">
+                  <p>feedback:</p>
+                  <div>{repositoryData.final_remarks}</div>
+                  </div>
               </div>
 
               {/* Right Side - README  */}
