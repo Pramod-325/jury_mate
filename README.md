@@ -2,6 +2,13 @@
 
 JuryMate is an innovative web application designed to streamline the judging process at hackathons. Leveraging the power of AI, it analyzes GitHub repositories of hackathon projects and generates concise, insightful podcast-style summaries. This helps jury members quickly grasp the essence of each project, its technical stack, and key functionalities, making their evaluation more efficient and informed.
 
+<h2>System Architecture</h2><br>
+---
+
+![Architectural Diagram](https://github.com/Pramod-325/jury_mate/blob/main/public/1000130603.jpg)
+
+---
+
 ## ✨ Features
 
 *   **GitHub Repository Analysis**: Automatically fetches and parses project details from GitHub URLs, including descriptions, languages, stars, contributors, and README content.
