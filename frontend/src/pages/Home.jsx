@@ -17,7 +17,7 @@ function Home() {
       title: "README Generator",
       description: "Extract comprehensive project descriptions, goals, and documentation insights automatically from your repository.",
       gradient: "from-green-500 to-emerald-500",
-      toLink:'/'
+      toLink:'/readme'
     },
     {
       icon: BarChart3,
