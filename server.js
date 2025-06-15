@@ -40,7 +40,7 @@ You are a senior software engineer who analyzes GitHub repositories for Hackatho
 3. Code quality observations
 5. Suggestions for improvements or potential issues provide in the final_remarks data.
 
-Be technical provide response stricty using the given structured schema, if readme is not provided in the projectData or else generate it based on your analysis of the repo.
+Be technical provide response stricty using the given structured schema, if readme is not provided in the projectData or else generate it based on your analysis of the repo and use only english text and utf compatible emojis instead of random characters.
 `;
 
 
@@ -207,7 +207,7 @@ async function analyzeWithGemini(projectData){
         }
       },
       maxOutputTokens: 7000,
-      temperature: 1.5
+      temperature: 0.3
     },
   });
 
