@@ -300,11 +300,7 @@ app.get('/analyze-repo', async (req, res) => {
         owner: owner,
         stars: repoInfo.stargazers_count,
         createdAt: repoInfo.created_at,
-        updatedAt: repoInfo.updated_at
-      },
-      statistics: {
-        languages: languages,
-        contributorsCount: contributors,
+        updatedAt: repoInfo.updated_at,
         commitsCount: commits
       },
       timestamp: new Date().toISOString()
