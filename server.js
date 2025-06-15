@@ -290,6 +290,7 @@ app.get('/analyze-repo', async (req, res) => {
     // Return the final response
     res.json({
       // projectData
+      
       success: true,
       aiAnalysis: JSON.parse(aiAnalysis),
       // timestamp: new Date().toISOString()
